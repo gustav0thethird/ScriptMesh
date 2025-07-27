@@ -51,16 +51,12 @@ AGENT_URLS = {
 def read_file(filename: str = Query(...)):
     base_dir = Path("/data").resolve()
 
-    # Normalize the filename to prevent directory traversal
-    normalized_filename = os.path.normpath(filename)
-    if ".." in normalized_filename or normalized_filename.startswith("/"):
-        raise HTTPException(status_code=400, detail="Invalid file path")
-
-    requested_path = (base_dir / normalized_filename).resolve()
-
     try:
+        # Construct the full path and resolve it to an absolute path
+        requested_path = (base_dir / filename).resolve()
+        # Ensure the resolved path is within the base directory
         requested_path.relative_to(base_dir)
-    except ValueError:
+    except (ValueError, RuntimeError):
         raise HTTPException(status_code=400, detail="Invalid file path")
 
     if not requested_path.exists():
