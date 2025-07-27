@@ -113,7 +113,8 @@ def run_script(payload: RunScript):
         }
 
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        logging.error(f"Exception in /run-script: {e}")
+        return JSONResponse(status_code=500, content={"error": "An internal server error occurred"})
 
 
 # Start agent if called
