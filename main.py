@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from pathlib import Path
 import requests
-
+import os
 
 # --- API Key Middleware --- #
 
@@ -49,12 +49,16 @@ AGENT_URLS = {
 # NOTE: Maybe set this up to pull files from agent hosts with list and export based on manifest?
 @app.get("/read")
 def read_file(filename: str = Query(...)):
-    path = Path(f"/data/{filename}")
+    base_dir = Path("/data").resolve()
+    requested_path = (base_dir / filename).resolve()
 
-    if not path.exists():
+    if not str(requested_path).startswith(str(base_dir)):
+        raise HTTPException(status_code=400, detail="Invalid file path")
+
+    if not requested_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
 
-    return {"content": path.read_text()}
+    return {"content": requested_path.read_text()}
 
 
 # Get list of agents assigned under AGENT_URLS
