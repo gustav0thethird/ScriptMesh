@@ -7,7 +7,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir --target=/deps -r requirements.txt
 
-COPY main.py .
+COPY orchestrator.py .
 
 # --- Final Stage - Minimal runtime container --- #
 
@@ -34,4 +34,4 @@ EXPOSE 8000
 
 # Run app using Uvicorn
 # NOTE: Maybe gunicorn???
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "orchestrator:app", "--host", "0.0.0.0", "--port", "8000"]
