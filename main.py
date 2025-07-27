@@ -50,7 +50,13 @@ AGENT_URLS = {
 @app.get("/read")
 def read_file(filename: str = Query(...)):
     base_dir = Path("/data").resolve()
-    requested_path = (base_dir / filename).resolve()
+
+    # Normalize the filename to prevent directory traversal
+    normalized_filename = os.path.normpath(filename)
+    if ".." in normalized_filename or normalized_filename.startswith("/"):
+        raise HTTPException(status_code=400, detail="Invalid file path")
+
+    requested_path = (base_dir / normalized_filename).resolve()
 
     if not str(requested_path).startswith(str(base_dir)):
         raise HTTPException(status_code=400, detail="Invalid file path")
