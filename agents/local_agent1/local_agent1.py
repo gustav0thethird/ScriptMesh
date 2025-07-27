@@ -4,7 +4,9 @@ from pydantic import BaseModel
 from pathlib import Path
 import logging
 
-logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 import json
 import subprocess
 import os
@@ -72,11 +74,15 @@ def get_scripts():
 
     except FileNotFoundError as e:
         logging.error(f"FileNotFoundError: {e}")
-        return JSONResponse(status_code=404, content={"error": "Manifest file not found"})
+        return JSONResponse(
+            status_code=404, content={"error": "Manifest file not found"}
+        )
 
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
-        return JSONResponse(status_code=500, content={"error": "An internal server error occurred"})
+        return JSONResponse(
+            status_code=500, content={"error": "An internal server error occurred"}
+        )
 
 
 # Run assigned script from script_manifest.json
