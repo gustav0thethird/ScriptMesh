@@ -7,7 +7,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir --target=/deps -r requirements.txt
 
-COPY main.py .
+COPY orchestrator.py .
 
 # --- Final Stage - Minimal runtime container --- #
 
