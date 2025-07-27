@@ -1,0 +1,9 @@
+# .github/labeler.yml
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file: ['**/requirements.txt', '**/pyproject.toml']
+
+python:
+  - changed-files:
+      - any-glob-to-any-file: ['**/*.py']
