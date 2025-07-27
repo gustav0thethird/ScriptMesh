@@ -1,7 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: "pip"
-    directory: "/"  # root-level requirements.txt
+    directory: "/"  # Root-level requirements.txt
     schedule:
       interval: "weekly"
     versioning-strategy: increase
@@ -10,6 +10,10 @@ updates:
       - python
     commit-message:
       prefix: "build(deps)"
+    groups:
+      default:
+        patterns:
+          - "*"
 
   - package-ecosystem: "pip"
     directory: "/agents/local_agent1"
@@ -21,6 +25,10 @@ updates:
       - python
     commit-message:
       prefix: "build(deps)"
+    groups:
+      default:
+        patterns:
+          - "*"
 
   - package-ecosystem: "pip"
     directory: "/agents/local_agent2"
@@ -32,3 +40,7 @@ updates:
       - python
     commit-message:
       prefix: "build(deps)"
+    groups:
+      default:
+        patterns:
+          - "*"
