@@ -69,7 +69,10 @@ def get_scripts():
         return data
 
     except FileNotFoundError as e:
-        return JSONResponse(status_code=404, content={"error": str(e)})
+        logging.warning(f"Manifest file not found: {e}")
+        return JSONResponse(
+            status_code=404, content={"error": "Manifest file not found"}
+        )
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
