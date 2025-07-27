@@ -69,10 +69,14 @@ def get_scripts():
         return data
 
     except FileNotFoundError as e:
-        return JSONResponse(status_code=404, content={"error": str(e)})
+        logging.warning(f"Manifest file not found: {e}")
+        return JSONResponse(
+            status_code=404, content={"error": "Manifest file not found"}
+        )
 
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        logging.error("An unexpected error occurred", exc_info=True)
+        return JSONResponse(status_code=500, content={"error": "An internal error has occurred."})
 
 
 # Run assigned script from script_manifest.json
@@ -103,7 +107,8 @@ def run_script(payload: RunScript):
         }
 
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        logging.error("An unexpected error occurred while running the script", exc_info=True)
+        return JSONResponse(status_code=500, content={"error": "An internal error has occurred."})
 
 
 # Start agent if called
