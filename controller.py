@@ -131,47 +131,61 @@ def get_agents():
 
 # Gets scripts on required agent
 def get_scripts(agent):
-
     url = f"http://{host}/get-scripts"
-
     headers = {"Content-Type": "application/json", "x-api-key": SCRIPT_MESH_MAIN_KEY}
-
     payload = {"agent": agent}
 
-    response = requests.get(url, headers=headers, params=payload)
-    rc = response.status_code
-    data = response.json()
+    try:
+        response = requests.get(url, headers=headers, params=payload)
+        rc = response.status_code
 
-    if rc == 200:
-        scripts = response.json().get("scripts", [])
-        print(f"\n Scripts available on {agent}")
-        for item in scripts:
-            print(f"- {item['name']} ({item['path']})")
-        logger.info(f"Successfully fetched scripts for {agent} - {rc}")
+        if rc == 200:
+            scripts = response.json().get("scripts", [])
+            print(f"\n Scripts available on {agent}")
+            for item in scripts:
+                print(f"- {item['name']} ({item['path']})")
+            logger.info(f"Successfully fetched scripts for {agent} - {rc}")
 
-    else:
-        logger.warning(f"Unable to fetch scripts - {rc} - {data.get('detail')}")
+        else:
+            try:
+                error_detail = response.json().get("detail", response.text)
+            except Exception:
+                error_detail = response.text
+
+            print(f"\nScript fetch failed: {rc} - {error_detail}")
+            logger.warning(f"Unable to fetch scripts - {rc} - {error_detail}")
+
+    except Exception as e:
+        print(f"\nError contacting orchestrator: {e}")
+        logger.error(f"Error fetching scripts: {e}")
+
 
 
 # Trigger remote script
 def trigger_script(script, agent):
-
     url = f"http://{host}/trigger-script"
-
     headers = {"Content-Type": "application/json", "x-api-key": SCRIPT_MESH_MAIN_KEY}
-
     payload = {"run_script": script, "agent": agent}
 
-    response = requests.post(url, json=payload, headers=headers)
-    rc = response.status_code
-    data = response.json()
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        rc = response.status_code
 
-    if rc == 200:
-        print_script_response(agent, data)
+        try:
+            data = response.json()
+        except Exception:
+            data = {}
 
-    else:
-        print("\n")
-        logger.warning(f"Unable to trigger script - {rc} - {data.get('detail')}")
+        if response.ok:
+            print_script_response(agent, data)
+        else:
+            error_detail = data.get("detail", "No details provided")
+            print(f"\nScript trigger failed: {error_detail} (HTTP {rc})")
+            logger.warning(f"Unable to trigger script - {rc} - {error_detail}")
+
+    except Exception as e:
+        logger.exception("Request failed")
+        print(f"\nException during request: {e}")
 
 
 # --- Main Loop --- #
