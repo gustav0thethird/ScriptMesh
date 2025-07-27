@@ -58,7 +58,9 @@ def read_file(filename: str = Query(...)):
 
     requested_path = (base_dir / normalized_filename).resolve()
 
-    if not str(requested_path).startswith(str(base_dir)):
+    try:
+        requested_path.relative_to(base_dir)
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid file path")
 
     if not requested_path.exists():
