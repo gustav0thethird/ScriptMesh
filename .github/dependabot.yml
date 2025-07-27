@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"  # root-level requirements.txt
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "pip"
+    directory: "/agents/local_agent1"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "pip"
+    directory: "/agents/local_agent2"
+    schedule:
+      interval: "weekly"
