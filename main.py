@@ -52,7 +52,6 @@ def read_file(filename: str = Query(...)):
     base_dir = Path("/data").resolve()
 
     try:
-        # Normalize and resolve the filename to prevent directory traversal
         requested_path = (base_dir / filename).resolve()
         # Ensure the resolved path is within the base directory
         requested_path.relative_to(base_dir)
