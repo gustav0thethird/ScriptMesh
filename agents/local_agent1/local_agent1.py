@@ -14,6 +14,7 @@ MANIFEST_PATH = Path("script_manifest.json")
 class RunScript(BaseModel):
     script_name: str
 
+# --- API Key Middleware --- #
 
 API_KEY = os.getenv("SCRIPT_MESH_AGENT_KEY", "localagent1secret")
 EXCLUDED_PATHS = {"/docs", "/openapi.json", "/"}
