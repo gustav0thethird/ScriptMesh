@@ -61,7 +61,7 @@ ScriptMesh lets you securely trigger approved scripts on remote nodes - without 
         ▼                          ▼                          ▼
 ┌────────────────┐       ┌────────────────┐       ┌────────────────┐
 │  Agent Node 1  │       │  Agent Node 2  │       │  Agent Node 3  │
-│ (agent)        │       │   (agent 2)    │       │    (agent3)    │
+│   (agent)      │       │   (agent 2)    │       │    (agent3)    │
 │  Manifest:     │       │  Manifest:     │       │  Manifest:     │
 │  hello.py      │       │  backup.sh     │       │  scan_logs.sh  │
 └────────────────┘       └────────────────┘       └────────────────┘
