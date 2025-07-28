@@ -84,14 +84,14 @@ ScriptMesh currently involves 3 components:
 ```bash
    cd orchestrator
    docker-compose up --build -d
-   ```
+```
 
 2. **Remote Agents (agent.py)** - Run these anywhere:
 ```bash
     cd agent
     pip install -r requirements.txt
     py agent.py
-    ```
+```
 
  - Configure orchestrator URL via environment variables.
  - Recommended: Run agents as systemd services for persistent deployments
