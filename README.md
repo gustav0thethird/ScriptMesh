@@ -14,7 +14,8 @@ ScriptMesh lets you securely trigger approved scripts on remote nodes - without 
 > ScriptMesh is an early-stage project - stable for local testing, but production hardening is ongoing. Use with caution on public-facing nodes.
 
 ## What's New in v0.2.0
-
+ - **Robust Logging:** The orchestrator, agents and controller now have logging locally and are returned to be accessed via the http response.
+   
  - **Unified Agent Structure:** All agent functionality consolidated into a single standard agent.py.
 
  - **Automatic Script & Manifest Generation:** Agents automatically create required scripts (hello_world.py) and manifests (script_manifest.json) on startup if missing.
