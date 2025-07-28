@@ -13,6 +13,19 @@ ScriptMesh lets you securely trigger approved scripts on remote nodes - without 
 > 🚧 **Development in Progress**  
 > ScriptMesh is an early-stage project - stable for local testing, but production hardening is ongoing. Use with caution on public-facing nodes.
 
+## What's New in v0.1.1
+
+ - **Unified Agent Structure:** All agent functionality consolidated into a single standard agent.py.
+
+ - **Automatic Script & Manifest Generation:** Agents automatically create required scripts (hello_world.py) and manifests (script_manifest.json) on startup if missing.
+
+ - **Enhanced Security:** Fernet encryption now protects stored agent API keys.
+
+ - **Simplified Agent Registration:** Automatic registration with the orchestrator on agent startup. Agent name also pulled from host name i.e SERVER1_ScriptMesh_Agent.
+
+ - **Improved Logging & Error Handling:** Robust logging added to orchestrator, agent, and controller components.
+
+---
 ## 🚀 Features
 
 - ⚙️ **Remote script execution** across agent nodes via HTTP
@@ -48,7 +61,7 @@ ScriptMesh lets you securely trigger approved scripts on remote nodes - without 
         ▼                          ▼                          ▼
 ┌────────────────┐       ┌────────────────┐       ┌────────────────┐
 │  Agent Node 1  │       │  Agent Node 2  │       │  Agent Node 3  │
-│ (local_agent1) │       │ (local_agent2) │       │ (local_agent3) │
+│ (agent)        │       │   (agent 2)    │       │    (agent3)    │
 │  Manifest:     │       │  Manifest:     │       │  Manifest:     │
 │  hello.py      │       │  backup.sh     │       │  scan_logs.sh  │
 └────────────────┘       └────────────────┘       └────────────────┘
@@ -56,22 +69,34 @@ ScriptMesh lets you securely trigger approved scripts on remote nodes - without 
   ⬑ API-triggered scripts executed ONLY if whitelisted in `script_manifest.json`
 ```
 ---
-## ⚙️ Get Started
+## ⚙️ Getting Started
 
 ScriptMesh currently involves 3 components:
 
-1. **Core Container (main.py)** - Host this via Docker (EC2, ECS, or on-prem):
-   ```bash
+**Clone the repo**
+  ```bash
+  git clone https://github.com/gustav0thethird/ScriptMesh.git
+  cd ScriptMesh
+  ```
+
+
+1. **Orchestrator Service (orchestrator.py)** - Host this via Docker (EC2, ECS, or on-prem):
+```bash
+   cd orchestrator
    docker-compose up --build -d
    ```
 
-2. **Remote Agents (local_agentX.py)** - Run these anywhere:
+2. **Remote Agents (agent.py)** - Run these anywhere:
+```bash
+    cd agent
+    pip install -r requirements.txt
+    py agent.py
+    ```
 
-   - Update the target IP/URL in `main.py` as well as `controller.py` if you are using manually
-   - Open the necessary ports on agent hosts
-   - Register agents as `systemd` services (recommended)
+ - Configure orchestrator URL via environment variables.
+ - Recommended: Run agents as systemd services for persistent deployments
 
-3. **Controller CLI (controller.py)** - Run this locally to issue commands.
+3. **Controller CLI (controller.py)** - Run this locally to issue commands to the orchestrator.
 
 > Agents and controller default to `localhost` for development - simply update IPs and ports to scale to real nodes.
 
@@ -98,9 +123,13 @@ Each agent folder must define its allowed scripts using a `script_manifest.json`
 
 ## 🛡️ Security
 
-- All API endpoints are protected with API key middleware.
-- Only whitelisted scripts in the manifest can be executed.
-- You control the runtime and exposure of each agent node.
+- **API key authentication:** Middleware-protected endpoints.
+
+- **Fernet encryption:** Protects stored agent API keys. (stored in cfg/fernet.key)
+
+> If the fernet.key is lost, you must regenerate the key and re-register agents.
+
+- **Manifest whitelisting:** Only scripts defined in the manifest can run.
 
 ### 🛡️ Pro Tip: Secure Your Deployment
 
