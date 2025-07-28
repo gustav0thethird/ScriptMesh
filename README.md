@@ -22,7 +22,7 @@ ScriptMesh lets you securely trigger approved scripts on remote nodes - without 
 
  - **Automatic Script & Manifest Generation:** Agents automatically create required scripts (hello_world.py) and manifests (script_manifest.json) on startup if missing.
 
- - **Enhanced Security:** Fernet encryption now protects stored agent API keys.
+ - **Enhanced Security:** Fernet encryption now protects stored agent API keys and are encrypted upon registration and decrypted at execution to the corresponding agent.
 
  - **Simplified Agent Registration:** Automatic registration with the orchestrator on agent startup. Agent name also pulled from host name i.e SERVER1_ScriptMesh_Agent.
 
