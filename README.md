@@ -42,7 +42,7 @@ ScriptMesh lets you securely trigger approved scripts on remote nodes - without 
 
 ## 🧠 How It Works
 
-1. The **Docker container** runs `main.py`, which exposes secure FastAPI endpoints to list, trigger, and query agents.
+1. The **Docker container** runs `orchestrator.py`, which exposes secure FastAPI endpoints to list, trigger, and query agents.
 2. Each **agent** runs its own micro FastAPI server and is governed by a `script_manifest.json` that whitelists which scripts can be executed.
 3. The **Controller CLI** (`controller.py`) is a simple script to send execution tasks and query requests to the API.
 
@@ -56,7 +56,7 @@ ScriptMesh lets you securely trigger approved scripts on remote nodes - without 
                                     ▼
                          ┌────────────────────┐
                          │   Core API Server  │
-                         │      (main.py)     │
+                         │      (orchestrator.py)     │
                          │   via FastAPI      │
                          └─────────┬──────────┘
                                    │
@@ -156,7 +156,7 @@ This gives you:
 
 ScriptMesh uses **API key headers** for both orchestrator and agent security.
 
-### 1. Main Service (`main.py`)
+### 1. Main Service (`orchestrator.py`)
 
 - Protected via a single global key.
 - Required on **all requests to main** (except `/`, `/docs`, `/openapi.json`).
@@ -175,10 +175,10 @@ export SCRIPT_MESH_MAIN_KEY=CHANGEME
 
 ### 2. Agents (`local_agent1`, `local_agent2`, etc.)
 
-- Each agent has its **own unique API key**, only used by `main.py` when dispatching.
+- Each agent has its **own unique API key**, only used by `orchestrator.py` when dispatching.
 - These are **not reused** across services.
 
-**Example from `main.py`:**
+**Example from `orchestrator.py`:**
 ```python
 AGENT_KEYS = {
     "LOCAL_AGENT1": "localagent1secret",
