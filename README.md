@@ -18,6 +18,8 @@ ScriptMesh lets you securely trigger approved scripts on remote nodes - without 
    
  - **Unified Agent Structure:** All agent functionality consolidated into a single standard agent.py.
 
+ - **Agent health checks:** Checks for agent heartbeats for agents registered the agent_registry.json every minute to check availability.
+
  - **Automatic Script & Manifest Generation:** Agents automatically create required scripts (hello_world.py) and manifests (script_manifest.json) on startup if missing.
 
  - **Enhanced Security:** Fernet encryption now protects stored agent API keys.
