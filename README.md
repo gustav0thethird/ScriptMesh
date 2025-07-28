@@ -61,7 +61,7 @@ ScriptMesh lets you securely trigger approved scripts on remote nodes - without 
         ▼                          ▼                          ▼
 ┌────────────────┐       ┌────────────────┐       ┌────────────────┐
 │  Agent Node 1  │       │  Agent Node 2  │       │  Agent Node 3  │
-│   (agent)      │       │   (agent 2)    │       │    (agent3)    │
+│ (agent)        │       │   (agent 2)    │       │    (agent3)    │
 │  Manifest:     │       │  Manifest:     │       │  Manifest:     │
 │  hello.py      │       │  backup.sh     │       │  scan_logs.sh  │
 └────────────────┘       └────────────────┘       └────────────────┘
@@ -84,14 +84,14 @@ ScriptMesh currently involves 3 components:
 ```bash
    cd orchestrator
    docker-compose up --build -d
-   ```
+```
 
 2. **Remote Agents (agent.py)** - Run these anywhere:
 ```bash
     cd agent
     pip install -r requirements.txt
     py agent.py
-    ```
+```
 
  - Configure orchestrator URL via environment variables.
  - Recommended: Run agents as systemd services for persistent deployments
