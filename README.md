@@ -13,7 +13,7 @@ ScriptMesh lets you securely trigger approved scripts on remote nodes - without 
 > 🚧 **Development in Progress**  
 > ScriptMesh is an early-stage project - stable for local testing, but production hardening is ongoing. Use with caution on public-facing nodes.
 
-## What's New in v0.1.1
+## What's New in v0.2.0
 
  - **Unified Agent Structure:** All agent functionality consolidated into a single standard agent.py.
 
