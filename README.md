@@ -5,6 +5,10 @@
 ![Status](https://img.shields.io/badge/status-in%20development-orange)
 
 **ScriptMesh** A lightweight agent-controller framework built with FastAPI and Docker, designed to securely trigger and manage scripts across a distributed mesh of remote agents.
+---
+<img width="1024" height="1024" alt="ScriptMesh" src="https://github.com/user-attachments/assets/25d586da-4782-4bf4-8b1f-72cc219afce5" />
+
+---
 
 ## Why ScriptMesh?
 ScriptMesh lets you securely trigger approved scripts on remote nodes - without SSH, shared drives, or full agent bloat. Think secure API-driven orchestration, not flaky bash runners, with minimal overhead and maximum control.
