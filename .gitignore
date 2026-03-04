@@ -23,6 +23,9 @@ htmlcov/
 coverage.xml
 
 # Runtime directories (auto-created, contain secrets)
+cfg/
+logs/
+data/
 orchestrator/cfg/
 orchestrator/logs/
 orchestrator/data/
