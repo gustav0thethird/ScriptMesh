@@ -1,0 +1,43 @@
+# Environment & secrets
+.env
+*.env
+*.key
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Runtime directories (auto-created, contain secrets)
+orchestrator/cfg/
+orchestrator/logs/
+orchestrator/data/
+agent/cfg/
+agent/logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+ScriptMesh-ui.log

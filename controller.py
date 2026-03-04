@@ -1,206 +1,249 @@
-import requests
+"""
+ScriptMesh Controller CLI
+=========================
+Interactive command-line client for the ScriptMesh orchestrator.
+
+Configuration via environment variables:
+    SCRIPT_MESH_MAIN_KEY   — API key for the orchestrator (required)
+    ORCHESTRATOR_HOST      — host:port of the orchestrator (default: localhost:8000)
+    ORCHESTRATOR_SCHEME    — http or https (default: http)
+"""
+
+import os
+import sys
 import logging
+import requests
 
-# --- Key Vars --- #
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
 
-SCRIPT_MESH_MAIN_KEY = "CHANGEME"
+SCRIPT_MESH_MAIN_KEY = os.getenv("SCRIPT_MESH_MAIN_KEY", "")
+if not SCRIPT_MESH_MAIN_KEY:
+    print(
+        "ERROR: SCRIPT_MESH_MAIN_KEY environment variable is not set.\n"
+        "Export it before running: export SCRIPT_MESH_MAIN_KEY=<your-key>",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
-host = "localhost:8000"
+ORCHESTRATOR_HOST = os.getenv("ORCHESTRATOR_HOST", "localhost:8000")
+ORCHESTRATOR_SCHEME = os.getenv("ORCHESTRATOR_SCHEME", "http")
+BASE_URL = f"{ORCHESTRATOR_SCHEME}://{ORCHESTRATOR_HOST}"
 
+REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "10"))
 
-# --- Global Logging Setup --- #
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-file_handler = logging.FileHandler("ScriptMesh-ui.log")
-file_handler.setFormatter(
+_file_handler = logging.FileHandler("ScriptMesh-ui.log")
+_file_handler.setFormatter(
     logging.Formatter(
         "%(asctime)s | %(levelname)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 )
+logger.addHandler(_file_handler)
 
-logger.addHandler(file_handler)
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+_HEADERS = {
+    "Content-Type": "application/json",
+    "x-api-key": SCRIPT_MESH_MAIN_KEY,
+}
 
 
-# --- Helper Functions --- #
+def _get(path: str, **kwargs) -> requests.Response:
+    return requests.get(f"{BASE_URL}{path}", headers=_HEADERS, timeout=REQUEST_TIMEOUT, **kwargs)
 
 
-# Mode picker
-def get_mode():
+def _post(path: str, **kwargs) -> requests.Response:
+    return requests.post(f"{BASE_URL}{path}", headers=_HEADERS, timeout=REQUEST_TIMEOUT, **kwargs)
+
+
+def get_mode() -> int:
     print("\nAvailable Modes:")
     print("1 → Read file from container")
     print("2 → List agents")
     print("3 → List scripts on agent")
     print("4 → Trigger script on agent")
+    print("5 → Agent status / health")
     try:
-        mode = int(input("Enter mode (1-4): "))
-
-    except Exception as e:
-        print("Invalid input. Please enter a number!")
+        return int(input("Enter mode (1-5): "))
+    except (ValueError, EOFError):
+        print("Invalid input — please enter a number.")
         return 0
 
-    return mode
+
+def select_agent(prompt: str = "Specify agent name") -> str:
+    return input(f"\n{prompt}: ").strip()
 
 
-# Choose file to read
-def read_content():
-    print("Specify file to read:")
-    file = input()
-    return file
+def select_script() -> str:
+    return input("\nSpecify script name to run: ").strip()
 
 
-# Select script to run
-def select_script():
-    print("\nSpecify script to run:")
-    script = input()
-    return script
-
-
-# Select agent
-def select_agent():
-    print("\nSpecify agent to view scripts:")
-    agent = input()
-    return agent
-
-
-# Function for verbose output data
-def print_script_response(agent, data):
+def print_script_response(agent: str, data: dict) -> None:
     try:
         agent_output = data["output"]
-        script = agent_output["script"]
-        result = agent_output["output"]
+        script = agent_output.get("script", "?")
+        result = agent_output.get("output", agent_output)
 
         print(f"\n[{agent}] {script} executed")
         print(f"→ stdout: {result.get('stdout') or '(no output)'}")
         if result.get("stderr"):
             print(f"→ stderr: {result['stderr']}")
-        print(f"→ return code: {result['returncode']}")
-
-    except Exception as e:
-        print(f"\nError parsing script response: {e}")
+        print(f"→ return code: {result.get('returncode', '?')}")
+    except Exception as exc:
+        print(f"\nError parsing script response: {exc}")
         print(data)
 
 
-# --- API Functions --- #
+# ---------------------------------------------------------------------------
+# API functions
+# ---------------------------------------------------------------------------
 
 
-# Read remote file
-def api_read(file):
-
-    url = f"http://{host}/read?filename={file}"
-
-    headers = {"Content-Type": "application/json", "x-api-key": SCRIPT_MESH_MAIN_KEY}
-
-    response = requests.get(url, headers=headers)
-    rc = response.status_code
-    data = response.json()
-
-    if rc == 200:
-        content = data["content"]
-        print(f"Status: {rc}")
-        print(f"\n[{file}]")
-        print(f"Content:\n{content}\n")
-        logger.info(f"Successfully read - {file} - {rc}")
-
-    else:
-        print("\n")
-        logger.warning(f"Unable to read file - {rc} - {data.get('detail')}")
-
-
-# Gets agents
-def get_agents():
-    url = f"http://{host}/get-agents"
-
-    headers = {"Content-Type": "application/json", "x-api-key": SCRIPT_MESH_MAIN_KEY}
-
-    response = requests.get(url, headers=headers)
-    rc = response.status_code
-    data = response.json()
-
-    if rc == 200:
-        print("\nAvailable Agents:")
-        for name, url in data.items():
-            print(f"- {name}: {url}")
-        logger.info(f"Successfully retrieved agents - {rc}")
-
-    else:
-        print("\n")
-        logger.warning(f"Unable to get agents - {rc} - {data.get("detail")}")
-
-
-# Gets scripts on required agent
-def get_scripts(agent):
-    url = f"http://{host}/get-scripts"
-    headers = {"Content-Type": "application/json", "x-api-key": SCRIPT_MESH_MAIN_KEY}
-    payload = {"agent": agent}
-
+def api_read(filename: str) -> None:
     try:
-        response = requests.get(url, headers=headers, params=payload)
-        rc = response.status_code
+        response = _get("/read", params={"filename": filename})
+        if response.status_code == 200:
+            content = response.json().get("content", "")
+            print(f"\n[{filename}]\nContent:\n{content}\n")
+            logger.info("Read file '%s' — HTTP %d", filename, response.status_code)
+        else:
+            detail = response.json().get("detail", response.text)
+            print(f"\nFailed to read file: {detail} (HTTP {response.status_code})")
+            logger.warning("Read failed for '%s' — %d: %s", filename, response.status_code, detail)
+    except requests.exceptions.ConnectionError:
+        print(f"\nCould not connect to orchestrator at {BASE_URL}")
+        logger.error("Connection error reaching orchestrator")
+    except Exception as exc:
+        print(f"\nUnexpected error: {exc}")
+        logger.exception("Error in api_read")
 
-        if rc == 200:
+
+def get_agents() -> list[str]:
+    """Fetch and display registered agents. Returns a list of agent names."""
+    try:
+        response = _get("/get-agents")
+        if response.status_code == 200:
+            data = response.json()
+            if not data:
+                print("\nNo agents currently registered.")
+                return []
+            print("\nRegistered agents:")
+            for name, info in data.items():
+                print(f"  - {name}: {info.get('url', '?')}  (last seen: {info.get('last_seen', '?')})")
+            logger.info("Retrieved %d agent(s)", len(data))
+            return list(data.keys())
+        else:
+            detail = response.json().get("detail", response.text)
+            print(f"\nFailed to list agents: {detail} (HTTP {response.status_code})")
+            logger.warning("get-agents failed — %d: %s", response.status_code, detail)
+            return []
+    except requests.exceptions.ConnectionError:
+        print(f"\nCould not connect to orchestrator at {BASE_URL}")
+        logger.error("Connection error reaching orchestrator")
+        return []
+    except Exception as exc:
+        print(f"\nUnexpected error: {exc}")
+        logger.exception("Error in get_agents")
+        return []
+
+
+def get_scripts(agent: str) -> None:
+    try:
+        response = _get("/get-scripts", params={"agent": agent})
+        if response.status_code == 200:
             scripts = response.json().get("scripts", [])
-            print(f"\n Scripts available on {agent}")
+            if not scripts:
+                print(f"\nNo scripts found on agent '{agent}'.")
+                return
+            print(f"\nScripts on '{agent}':")
             for item in scripts:
-                print(f"- {item['name']} ({item['path']})")
-            logger.info(f"Successfully fetched scripts for {agent} - {rc}")
+                print(f"  - {item['name']}  ({item.get('path', '?')})")
+            logger.info("Fetched %d script(s) for agent '%s'", len(scripts), agent)
+        else:
+            detail = response.json().get("detail", response.text)
+            print(f"\nScript fetch failed: {detail} (HTTP {response.status_code})")
+            logger.warning("get-scripts failed for '%s' — %d: %s", agent, response.status_code, detail)
+    except requests.exceptions.ConnectionError:
+        print(f"\nCould not connect to orchestrator at {BASE_URL}")
+        logger.error("Connection error reaching orchestrator")
+    except Exception as exc:
+        print(f"\nUnexpected error: {exc}")
+        logger.exception("Error in get_scripts")
 
+
+def trigger_script(script: str, agent: str) -> None:
+    try:
+        response = _post(
+            "/trigger-script",
+            json={"run_script": script, "agent": agent},
+        )
+        if response.ok:
+            print_script_response(agent, response.json())
+            logger.info("Triggered script '%s' on agent '%s'", script, agent)
         else:
             try:
-                error_detail = response.json().get("detail", response.text)
+                detail = response.json().get("detail", "No details provided")
             except Exception:
-                error_detail = response.text
+                detail = response.text
+            print(f"\nScript trigger failed: {detail} (HTTP {response.status_code})")
+            logger.warning(
+                "trigger-script failed — %d: %s", response.status_code, detail
+            )
+    except requests.exceptions.ConnectionError:
+        print(f"\nCould not connect to orchestrator at {BASE_URL}")
+        logger.error("Connection error reaching orchestrator")
+    except Exception as exc:
+        print(f"\nUnexpected error: {exc}")
+        logger.exception("Error in trigger_script")
 
-            print(f"\nScript fetch failed: {rc} - {error_detail}")
-            logger.warning(f"Unable to fetch scripts - {rc} - {error_detail}")
 
-    except Exception as e:
-        print(f"\nError contacting orchestrator: {e}")
-        logger.error(f"Error fetching scripts: {e}")
-
-
-
-# Trigger remote script
-def trigger_script(script, agent):
-    url = f"http://{host}/trigger-script"
-    headers = {"Content-Type": "application/json", "x-api-key": SCRIPT_MESH_MAIN_KEY}
-    payload = {"run_script": script, "agent": agent}
-
+def agent_status() -> None:
     try:
-        response = requests.post(url, json=payload, headers=headers)
-        rc = response.status_code
-
-        try:
+        response = _get("/agent-status")
+        if response.status_code == 200:
             data = response.json()
-        except Exception:
-            data = {}
-
-        if response.ok:
-            print_script_response(agent, data)
+            if not data:
+                print("\nNo agents registered.")
+                return
+            print("\nAgent health status:")
+            for name, info in data.items():
+                status = info.get("status", "unknown")
+                checked = info.get("last_checked", "never")
+                print(f"  - {name}: {status}  (checked: {checked})")
         else:
-            error_detail = data.get("detail", "No details provided")
-            print(f"\nScript trigger failed: {error_detail} (HTTP {rc})")
-            logger.warning(f"Unable to trigger script - {rc} - {error_detail}")
-
-    except Exception as e:
-        logger.exception("Request failed")
-        print(f"\nException during request: {e}")
-
-
-# --- Main Loop --- #
+            print(f"\nFailed to get agent status (HTTP {response.status_code})")
+    except requests.exceptions.ConnectionError:
+        print(f"\nCould not connect to orchestrator at {BASE_URL}")
+    except Exception as exc:
+        print(f"\nUnexpected error: {exc}")
+        logger.exception("Error in agent_status")
 
 
-def main():
+# ---------------------------------------------------------------------------
+# Main loop
+# ---------------------------------------------------------------------------
+
+
+def main() -> None:
+    print(f"\nScriptMesh Controller  (orchestrator: {BASE_URL})")
 
     while True:
         mode = get_mode()
 
         try:
-
             if mode == 1:
-                file = read_content()
-                api_read(file)
+                filename = input("\nFile to read: ").strip()
+                api_read(filename)
 
             elif mode == 2:
                 get_agents()
@@ -208,24 +251,41 @@ def main():
             elif mode == 3:
                 get_agents()
                 agent = select_agent()
-                get_scripts(agent)
+                if agent:
+                    get_scripts(agent)
 
             elif mode == 4:
-                get_agents()
+                agents = get_agents()
                 agent = select_agent()
+                if not agent:
+                    print("No agent specified.")
+                    continue
                 get_scripts(agent)
                 script = select_script()
-                trigger_script(script, agent)
+                if script:
+                    trigger_script(script, agent)
+
+            elif mode == 5:
+                agent_status()
 
             else:
-                print("Invalid Mode Selected")
+                print("Invalid mode — choose 1–5.")
 
-        except Exception as e:
-            logger.error(f"Error - {e}")
+        except KeyboardInterrupt:
+            print("\nInterrupted.")
+            break
+        except Exception as exc:
+            logger.error("Unexpected error: %s", exc)
+            print(f"\nError: {exc}")
 
-        again = input("\nRun another command? (y/n)")
+        try:
+            again = input("\nRun another command? (y/n): ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            break
         if again != "y":
             break
+
+    print("\nGoodbye.")
 
 
 if __name__ == "__main__":

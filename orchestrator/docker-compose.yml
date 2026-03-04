@@ -1,10 +1,60 @@
 version: "3.8"
+
 services:
-  fastapi:
+  orchestrator:
     build: .
+    container_name: scriptmesh-orchestrator
+    restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
       - ./data:/data
       - ./logs:/app/logs
       - ./cfg:/app/cfg
+    environment:
+      # ----------------------------------------------------------------
+      # REQUIRED — set these via a .env file or your secrets manager.
+      # Never commit real values here.
+      # ----------------------------------------------------------------
+      - SCRIPT_MESH_MAIN_KEY=${SCRIPT_MESH_MAIN_KEY}
+
+      # ----------------------------------------------------------------
+      # Optional tuning
+      # ----------------------------------------------------------------
+      - DISABLE_DOCS=${DISABLE_DOCS:-false}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-}
+      - HEALTH_CHECK_INTERVAL=${HEALTH_CHECK_INTERVAL:-60}
+      - WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
+
+      # Python hardening
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+    # Limit resource usage to prevent a runaway process from starving the host
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"

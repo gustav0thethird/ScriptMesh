@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  ci:
+  lint-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,18 +16,48 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+          cache: "pip"
 
-      - name: Install dependencies
+      - name: Install all dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install black flake8 pytest
+          pip install -r orchestrator/requirements.txt
+          pip install -r agent/requirements.txt
+          pip install black flake8 pytest pytest-cov httpx
 
-      - name: Lint (black + flake8)
+      - name: Check code formatting (black)
+        run: black --check .
+
+      - name: Lint (flake8)
+        run: flake8 . --config=.flake8
+
+      - name: Run tests with coverage
+        env:
+          SCRIPT_MESH_MAIN_KEY: "ci-test-orchestrator-key-minimum-32-chars"
+          SCRIPT_MESH_AGENT_KEY: "ci-test-agent-secret-key-minimum-32chars"
+          ORCHESTRATOR_URL: "http://localhost:8000"
         run: |
-          black --check .
-          flake8 .
+          pytest tests/ \
+            --cov=orchestrator \
+            --cov=agent \
+            --cov-report=term-missing \
+            --cov-fail-under=70 \
+            -v
 
-      - name: Run tests
-        run: pytest
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: .coverage
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build orchestrator Docker image
+        run: docker build -t scriptmesh-orchestrator ./orchestrator
